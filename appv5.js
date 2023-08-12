@@ -47,7 +47,8 @@ mongoose.connect(DB_URI);
 const userSchema = new mongoose.Schema({
     username: String,
     password: String,
-    googleId: String
+    googleId: String,
+    secrets: [String]
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -81,7 +82,7 @@ passport.use(new GoogleStrategy({
   
   },
   function(accessToken, refreshToken, profile, cb) {
-    console.log(profile);
+    //console.log(profile);
     User.findOrCreate({ googleId: profile.id }, function (err, user) {
       return cb(err, user);
     });
@@ -102,12 +103,12 @@ app.get("/auth/google/secrets",
     
 });
 
-app.get("/", async function(req, res){
+app.get("/", function(req, res){
     res.render("home");
 
 });
 
-app.get("/login", async function(req, res){
+app.get("/login", function(req, res){
     res.render("login");
 });
 
@@ -115,14 +116,36 @@ app.get("/register", async function(req, res){
     res.render("register");
 });
 
-app.get("/secrets", function(req, res){
-    if (req.isAuthenticated()){
-        console.log("Request is authenticated!");
-        res.render("secrets");
+app.get("/submit", function(req, res){
+    if(req.isAuthenticated()){
+        res.render("submit");
     }else {
-        console.log(req.isAuthenticated());
-        res.redirect("/login");
+        res.redirect("/login")
     }
+});
+
+app.get("/secrets", async function(req, res, next){
+    let users_with_secrets = undefined;
+    let secrets = [];
+
+    try{
+        users_with_secrets = await User.find({"secrets": {$ne: null}});
+        console.log(users_with_secrets.length);
+        users_with_secrets.forEach(function(user){
+            secrets = secrets.concat(user.secrets);
+        });
+        res.render("secrets", {secrets: secrets} );
+    }catch(err){
+        console.log(err.message);
+        next(err);
+    }
+
+    // if (req.isAuthenticated()){
+    //     res.render("secrets");
+    // }else {
+    //     console.log(req.isAuthenticated());
+    //     res.redirect("/login");
+    // }
 });
 
 app.get("/logout", function(req, res, next){
@@ -175,7 +198,17 @@ app.post("/register", async function(req, res){
 });
 
 
-app.post("/submit", async function(req, res){
+app.post("/submit", async function(req, res, next){
+    let usr = undefined;
+    try{
+        usr = await User.findById(req.user.id);
+        usr.secrets.push(req.body.secret); 
+        await usr.save();
+        return res.redirect("/secrets");
+    }catch(err){
+        console.log(err.message);
+        next(err);
+    }
 
 });
 
