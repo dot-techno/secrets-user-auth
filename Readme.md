@@ -14,9 +14,9 @@ Tech stack used:
 
 ### The goal is to explore different authentication options.
 
-v1 has no auth
-v2 uses encrpytion with a secret key to encript the MongoDB records
-v3 has auth using local database and bcyrpt to salt and store password hashes
-v4 has local authentication using Passport.js
-v5 has local and Google oauth 2.0 autentication using Passport.js
+- v1 has no auth
+- v2 uses encrpytion with a secret key to encript the MongoDB records
+- v3 has auth using local database and bcyrpt to salt and store password hashes
+- v4 has local authentication using Passport.js
+- v5 has local and Google oauth 2.0 autentication using Passport.js
 
